@@ -104,8 +104,7 @@ export class JobsScreen extends React.Component<JobsScreenProps, JobsScreenState
    */
   filterJobs = (jobs: JobRecord[], availability: Availability): void => {
     // Step 0: Clone the jobs input
-    //const newJobs: JobRecord[] = cloneDeep(jobs);
-    //console.log(newJobs, availability);
+  
     var updatedJobs: JobRecord[] = cloneDeep(jobs)
     
     // Step 1: Remove jobs where the schedule doesn't align with the users' availability.
@@ -115,6 +114,7 @@ export class JobsScreen extends React.Component<JobsScreenProps, JobsScreenState
         updatedJobs = updatedJobs.filter(job => !job.schedule.includes(day.charAt(0).toUpperCase() + day.slice(1)))
       }
     }  
+    //console.log(updatedJobs)
     // Step 2: Save into state
     this.setState({ jobs: updatedJobs });
   };
