@@ -1,5 +1,5 @@
 import React from 'react';
-import { View } from 'react-native';
+import { View, Text } from 'react-native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { GlobalContext } from '@components/ContextProvider';
 import { BaseScreen } from '../BaseScreen/BaseScreen';
@@ -29,6 +29,7 @@ interface JobsScreenState {
   staticHeader: boolean;
   status: Status;
   availability: Availability;
+  overlayVisible: boolean;
 }
 
 interface JobsScreenProps {
@@ -64,6 +65,7 @@ export class JobsScreen extends React.Component<JobsScreenProps, JobsScreenState
         thursday: true,
         friday: false,
       },
+      overlayVisible: true,
     };
   }
 
@@ -102,13 +104,19 @@ export class JobsScreen extends React.Component<JobsScreenProps, JobsScreenState
    */
   filterJobs = (jobs: JobRecord[], availability: Availability): void => {
     // Step 0: Clone the jobs input
-    const newJobs: JobRecord[] = cloneDeep(jobs);
-    console.log(newJobs, availability);
-
+  
+    var updatedJobs: JobRecord[] = cloneDeep(jobs)
+    
     // Step 1: Remove jobs where the schedule doesn't align with the users' availability.
 
+    for (const[day, isAvailable] of Object.entries(availability)) {
+      if (isAvailable == false) {     // if day is not selected, filter out any jobs with that day
+        updatedJobs = updatedJobs.filter(job => !job.schedule.includes(day.charAt(0).toUpperCase() + day.slice(1)))
+      }
+    }  
+    //console.log(updatedJobs)
     // Step 2: Save into state
-    this.setState({ jobs: newJobs });
+    this.setState({ jobs: updatedJobs });
   };
 
   getStatus = (jobs: JobRecord[]): Status => {
@@ -145,62 +153,68 @@ export class JobsScreen extends React.Component<JobsScreenProps, JobsScreenState
           />
         }
       >
-        <View>
-          <CheckBox
-            title="Monday"
-            checked={monday}
-            onPress={() =>
-              this.setState(prev => {
-                return { ...prev, availability: { ...prev.availability, monday: !monday } };
-              })
-            }
-          />
-          <CheckBox
-            title="Tuesday"
-            checked={tuesday}
-            onPress={() =>
-              this.setState(prev => {
-                return { ...prev, availability: { ...prev.availability, tuesday: !tuesday } };
-              })
-            }
-          />
-          <CheckBox
-            title="Wednesday"
-            checked={wednesday}
-            onPress={(): void =>
-              this.setState(prev => {
-                return { ...prev, availability: { ...prev.availability, wednesday: !wednesday } };
-              })
-            }
-          />
-          <CheckBox
-            title="Thursday"
-            checked={thursday}
-            onPress={(): void =>
-              this.setState(prev => {
-                return { ...prev, availability: { ...prev.availability, thursday: !thursday } };
-              })
-            }
-          />
-          <CheckBox
-            title="Friday"
-            checked={friday}
-            onPress={(): void =>
-              this.setState(prev => {
-                return { ...prev, availability: { ...prev.availability, friday: !friday } };
-              })
-            }
-          />
-        </View>
-        <View style={{ alignItems: 'center', marginVertical: 20 }}>
-          <Button
-            title="Filter Search"
-            containerStyle={{ width: '50%' }}
-            onPress={(): void => {
-              this.filterJobs(getJobs(), this.state.availability);
-            }}
-          />
-        </View>
+        <Overlay isVisible={this.state.overlayVisible}>
+          <View>
+            <View style={{alignItems: "center"}}>
+              <Text style={{fontWeight: "bold", fontSize: 20}}>Select Availability</Text>
+            </View>
+            <CheckBox
+              title="Monday"
+              checked={monday}
+              onPress={() =>
+                this.setState(prev => {
+                  return { ...prev, availability: { ...prev.availability, monday: !monday } };
+                })
+              }
+            />
+            <CheckBox
+              title="Tuesday"
+              checked={tuesday}
+              onPress={() =>
+                this.setState(prev => {
+                  return { ...prev, availability: { ...prev.availability, tuesday: !tuesday } };
+                })
+              }
+            />
+            <CheckBox
+              title="Wednesday"
+              checked={wednesday}
+              onPress={(): void =>
+                this.setState(prev => {
+                  return { ...prev, availability: { ...prev.availability, wednesday: !wednesday } };
+                })
+              }
+            />
+            <CheckBox
+              title="Thursday"
+              checked={thursday}
+              onPress={(): void =>
+                this.setState(prev => {
+                  return { ...prev, availability: { ...prev.availability, thursday: !thursday } };
+                })
+              }
+            />
+            <CheckBox
+              title="Friday"
+              checked={friday}
+              onPress={(): void =>
+                this.setState(prev => {
+                  return { ...prev, availability: { ...prev.availability, friday: !friday } };
+                })
+              }
+            />
+          </View>
+          <View style={{ alignItems: 'center', marginVertical: 20 }}>
+            <Button
+              title="Filter Search"
+              containerStyle={{ width: '50%' }}
+              onPress={(): void => {
+                this.setState({overlayVisible: false});
+                this.filterJobs(getJobs(), this.state.availability);
+              }}
+            />
+          </View>
+        </Overlay>
         <StatusController defaultChild={this.renderCards()} status={this.state.status} />
       </BaseScreen>
     );
